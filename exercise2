@@ -2,11 +2,30 @@ library(dplyr)
 library(readr)
 library(tidyr)
 
-titanic3 <- read_csv("~/Foundations of Data Science/titanic3.csv")
+titanic3 <- read_csv("~/Foundations of Data Science/titanic_original.csv")
+tbl_df(titanic3)
 
 #Step One: Missing values for embarkment
 
-titanic_embarked <- titanic3 %>% mutate(case_when(.$embarked == c('is.na') ~ 'S', TRUE ~ .$embarked))
+titanic_embarked <- titanic3 %>% mutate(embarked = case_when(.$embarked == c('is.na') ~ 'S', TRUE ~ .$embarked))
 
 #Step Two: Missing values for age
 
+mean_age <- mean(titanic_embarked$age, na.rm = TRUE)
+titanic_age <- titanic_embarked %>% replace_na(list(age = mean_age))
+
+#Using the mean for age may be more affected by outliers in the dataset, so using the median would be an alternative to the mean without that problem. 
+
+#Step Three: Fill the lifeboat column
+
+titanic_lifeboat <- titanic_age %>% replace_na(list(boat = 'None'))
+
+#Step Four: 
+
+titanic_cabin <- titanic_lifeboat %>% mutate(has_cabin_number = if_else(is.na(cabin), 0, 1))
+
+#A missing value here likely indicated that the individual did not survive the disaster.
+
+#Step Five: Write cleaned data to csv
+
+write.csv(titanic_cabin, "titanic_clean.csv")
