@@ -1,0 +1,12 @@
+library(dplyr)
+library(readr)
+library(tidyr)
+
+titanic3 <- read_csv("~/Foundations of Data Science/titanic3.csv")
+
+#Step One: Missing values for embarkment
+
+titanic_embarked <- titanic3 %>% mutate(case_when(.$embarked == c('is.na') ~ 'S', TRUE ~ .$embarked))
+
+#Step Two: Missing values for age
+
