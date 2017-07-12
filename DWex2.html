@@ -1,0 +1,153 @@
+Data Wrangling Exercise 2
+Michael Moran
+
+July 11, 2017
+
+Data Wrangling Exercise 2
+library(dplyr)
+## 
+## Attaching package: 'dplyr'
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+library(readr)
+library(tidyr)
+
+titanic3 <- read_csv("~/Foundations of Data Science/titanic_original.csv")
+
+## Parsed with column specification:
+## cols(
+##   pclass = col_integer(),
+##   survived = col_integer(),
+##   name = col_character(),
+##   sex = col_character(),
+##   age = col_double(),
+##   sibsp = col_integer(),
+##   parch = col_integer(),
+##   ticket = col_character(),
+##   fare = col_double(),
+##   cabin = col_character(),
+##   embarked = col_character(),
+##   boat = col_character(),
+##   body = col_integer(),
+##   home.dest = col_character()
+## )
+
+tbl_df(titanic3)
+
+## # A tibble: 1,309 x 14
+##    pclass survived                                            name    sex
+##     <int>    <int>                                           <chr>  <chr>
+##  1      1        1                   Allen, Miss. Elisabeth Walton female
+##  2      1        1                  Allison, Master. Hudson Trevor   male
+##  3      1        0                    Allison, Miss. Helen Loraine female
+##  4      1        0            Allison, Mr. Hudson Joshua Creighton   male
+##  5      1        0 Allison, Mrs. Hudson J C (Bessie Waldo Daniels) female
+##  6      1        1                             Anderson, Mr. Harry   male
+##  7      1        1               Andrews, Miss. Kornelia Theodosia female
+##  8      1        0                          Andrews, Mr. Thomas Jr   male
+##  9      1        1   Appleton, Mrs. Edward Dale (Charlotte Lamson) female
+## 10      1        0                         Artagaveytia, Mr. Ramon   male
+## # ... with 1,299 more rows, and 10 more variables: age <dbl>, sibsp <int>,
+## #   parch <int>, ticket <chr>, fare <dbl>, cabin <chr>, embarked <chr>,
+## #   boat <chr>, body <int>, home.dest <chr>
+
+Step One: Missing values for embarkment
+
+titanic_embarked <- titanic3 %>% mutate(embarked = case_when(.$embarked == c('is.na') ~ 'S', TRUE ~ .$embarked))
+
+tbl_df(titanic_embarked)
+## # A tibble: 1,309 x 14
+##    pclass survived                                            name    sex
+##     <int>    <int>                                           <chr>  <chr>
+##  1      1        1                   Allen, Miss. Elisabeth Walton female
+##  2      1        1                  Allison, Master. Hudson Trevor   male
+##  3      1        0                    Allison, Miss. Helen Loraine female
+##  4      1        0            Allison, Mr. Hudson Joshua Creighton   male
+##  5      1        0 Allison, Mrs. Hudson J C (Bessie Waldo Daniels) female
+##  6      1        1                             Anderson, Mr. Harry   male
+##  7      1        1               Andrews, Miss. Kornelia Theodosia female
+##  8      1        0                          Andrews, Mr. Thomas Jr   male
+##  9      1        1   Appleton, Mrs. Edward Dale (Charlotte Lamson) female
+## 10      1        0                         Artagaveytia, Mr. Ramon   male
+## # ... with 1,299 more rows, and 10 more variables: age <dbl>, sibsp <int>,
+## #   parch <int>, ticket <chr>, fare <dbl>, cabin <chr>, embarked <chr>,
+## #   boat <chr>, body <int>, home.dest <chr>
+
+Step Two: Missing values for age
+
+mean_age <- mean(titanic_embarked$age, na.rm = TRUE)
+titanic_age <- titanic_embarked %>% replace_na(list(age = mean_age))
+
+tbl_df(titanic_age)
+## # A tibble: 1,309 x 14
+##    pclass survived                                            name    sex
+##     <int>    <int>                                           <chr>  <chr>
+##  1      1        1                   Allen, Miss. Elisabeth Walton female
+##  2      1        1                  Allison, Master. Hudson Trevor   male
+##  3      1        0                    Allison, Miss. Helen Loraine female
+##  4      1        0            Allison, Mr. Hudson Joshua Creighton   male
+##  5      1        0 Allison, Mrs. Hudson J C (Bessie Waldo Daniels) female
+##  6      1        1                             Anderson, Mr. Harry   male
+##  7      1        1               Andrews, Miss. Kornelia Theodosia female
+##  8      1        0                          Andrews, Mr. Thomas Jr   male
+##  9      1        1   Appleton, Mrs. Edward Dale (Charlotte Lamson) female
+## 10      1        0                         Artagaveytia, Mr. Ramon   male
+## # ... with 1,299 more rows, and 10 more variables: age <dbl>, sibsp <int>,
+## #   parch <int>, ticket <chr>, fare <dbl>, cabin <chr>, embarked <chr>,
+## #   boat <chr>, body <int>, home.dest <chr>
+
+Using the mean for age may be more affected by outliers in the dataset, so using the median would be an alternative to the mean without that problem.
+
+Step Three: Fill the lifeboat column
+
+titanic_lifeboat <- titanic_age %>% replace_na(list(boat = 'None'))
+
+tbl_df(titanic_lifeboat)
+## # A tibble: 1,309 x 14
+##    pclass survived                                            name    sex
+##     <int>    <int>                                           <chr>  <chr>
+##  1      1        1                   Allen, Miss. Elisabeth Walton female
+##  2      1        1                  Allison, Master. Hudson Trevor   male
+##  3      1        0                    Allison, Miss. Helen Loraine female
+##  4      1        0            Allison, Mr. Hudson Joshua Creighton   male
+##  5      1        0 Allison, Mrs. Hudson J C (Bessie Waldo Daniels) female
+##  6      1        1                             Anderson, Mr. Harry   male
+##  7      1        1               Andrews, Miss. Kornelia Theodosia female
+##  8      1        0                          Andrews, Mr. Thomas Jr   male
+##  9      1        1   Appleton, Mrs. Edward Dale (Charlotte Lamson) female
+## 10      1        0                         Artagaveytia, Mr. Ramon   male
+## # ... with 1,299 more rows, and 10 more variables: age <dbl>, sibsp <int>,
+## #   parch <int>, ticket <chr>, fare <dbl>, cabin <chr>, embarked <chr>,
+## #   boat <chr>, body <int>, home.dest <chr>
+
+Step Four: Has cabin number column
+
+titanic_cabin <- titanic_lifeboat %>% mutate(has_cabin_number = if_else(is.na(cabin), 0, 1))
+
+tbl_df(titanic_cabin)
+## # A tibble: 1,309 x 15
+##    pclass survived                                            name    sex
+##     <int>    <int>                                           <chr>  <chr>
+##  1      1        1                   Allen, Miss. Elisabeth Walton female
+##  2      1        1                  Allison, Master. Hudson Trevor   male
+##  3      1        0                    Allison, Miss. Helen Loraine female
+##  4      1        0            Allison, Mr. Hudson Joshua Creighton   male
+##  5      1        0 Allison, Mrs. Hudson J C (Bessie Waldo Daniels) female
+##  6      1        1                             Anderson, Mr. Harry   male
+##  7      1        1               Andrews, Miss. Kornelia Theodosia female
+##  8      1        0                          Andrews, Mr. Thomas Jr   male
+##  9      1        1   Appleton, Mrs. Edward Dale (Charlotte Lamson) female
+## 10      1        0                         Artagaveytia, Mr. Ramon   male
+## # ... with 1,299 more rows, and 11 more variables: age <dbl>, sibsp <int>,
+## #   parch <int>, ticket <chr>, fare <dbl>, cabin <chr>, embarked <chr>,
+## #   boat <chr>, body <int>, home.dest <chr>, has_cabin_number <dbl>
+
+A missing value here likely indicated that the individual did not survive the disaster.
+
+Step Five: Write cleaned data to csv
+
+write.csv(titanic_cabin, "titanic_clean.csv")
